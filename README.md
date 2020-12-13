@@ -11,4 +11,3 @@ For details, navigate to the appropriate section:
 - [kuznyechik](./cipher/kuznyechik) block cipher
 - [ctr-acpkm](./cipher/ctr-acpkm) block mode
 - [streebog](./hash/streebog) hash function
-- [hmac](./hash/hmac) tag generation algorithm
