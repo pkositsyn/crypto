@@ -1,0 +1,168 @@
+package streebog
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestG(t *testing.T) { // nolint:funlen
+	initTableOnce.Do(initLPSTable)
+
+	testCases := []struct {
+		cipher         *Streebog
+		n              string
+		h              string
+		toEncodeString string
+		expectedString string
+	}{
+		{
+			cipher:         &Streebog{hashSize: hashSize256},
+			toEncodeString: "01323130393837363534333231303938373635343332313039383736353433323130393837363534333231303938373635343332313039383736353433323130",
+			expectedString: "e3bbadbf78af3264c9137127608aa510de90ba4d3075665844965fb611dbb1998d48552a0c0ce6bcba71bc802a4f5b2d2a07b12c22e25794178570341096fdc7",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize256},
+			h:              "e3bbadbf78af3264c9137127608aa510de90ba4d3075665844965fb611dbb1998d48552a0c0ce6bcba71bc802a4f5b2d2a07b12c22e25794178570341096fdc7",
+			toEncodeString: "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f8",
+			expectedString: "70f22bada4cfe18a6a56ec4b3f328cd40db8e1bf8a9d5f711d5efab11191279d715aab7648d07eddbf87dc79c80516e6ffcbcf5678b0ac29ea00fa85c8173cc6",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize256},
+			h:              "70f22bada4cfe18a6a56ec4b3f328cd40db8e1bf8a9d5f711d5efab11191279d715aab7648d07eddbf87dc79c80516e6ffcbcf5678b0ac29ea00fa85c8173cc6",
+			toEncodeString: "01323130393837363534333231303938373635343332313039383736353433323130393837363534333231303938373635343332313039383736353433323130",
+			expectedString: "00557be5e584fd52a449b16b0251d05d27f94ab76cbaa6da890b59d8ef1e159d2088e482e2acf564e0e9795a51e4dd261f3f667985a2fcc40ac8631faca1709a",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize256},
+			toEncodeString: "fbeafaebef20fffbf0e1e0f0f520e0ed20e8ece0ebe5f0f2f120fff0eeec20f120faf2fee5e2202ce8f6f3ede220e8e6eee1e8f0f2d1202ce8f0f2e5e220e5d1",
+			expectedString: "203cc15dd55fcaa5b7a3bd98fb2408a67d5b9f33a80bb50540852b204265a2c1aaca5efe1d8d51b2e1636e34f5becc077d930114fefaf176b69c15ad8f2b6878",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize256},
+			n:              "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200",
+			h:              "203cc15dd55fcaa5b7a3bd98fb2408a67d5b9f33a80bb50540852b204265a2c1aaca5efe1d8d51b2e1636e34f5becc077d930114fefaf176b69c15ad8f2b6878",
+			toEncodeString: "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001fbe2e5f0eee3c820",
+			expectedString: "a69049e7bd076ab775bc2873af26f098c538b17e39a5c027d532f0a2b3b56426c96b285fa297b9d39ae6afd8b9001d97bb718a65fcc53c41b4ebf4991a617227",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize256},
+			h:              "aee3bd55ea6f387bcf28c6dcbdbbfb3ddacc67dcc13dbd8d548c6bf808111d4b75b8e74d2afae960835ae6a5f03575559c9fd839783ffcd5cf99bd61566b4818",
+			toEncodeString: "fbeafaebef20fffbf0e1e0f0f520e0ed20e8ece0ebe5f0f2f120fff0eeec20f120faf2fee5e2202ce8f6f3ede220e8e6eee1e8f0f2d1202ee4d3d8d6d104adf1",
+			expectedString: "508f7e553c06501d749a66fc28c6cac0b005746d97537fa85d9e40904efed29dc345e53d7f84875d5068e4eb743f0793d673f09741f9578471fb2598cb35c230",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize512},
+			toEncodeString: "01323130393837363534333231303938373635343332313039383736353433323130393837363534333231303938373635343332313039383736353433323130",
+			expectedString: "fd102cf8812ccb1191ea34af21394f3817a86641445aa9a626488adb33738ebd2754f6908cbbbac5d3ed0f522c50815c954135793fb1f5d905fee4736b3bdae2",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize512},
+			h:              "fd102cf8812ccb1191ea34af21394f3817a86641445aa9a626488adb33738ebd2754f6908cbbbac5d3ed0f522c50815c954135793fb1f5d905fee4736b3bdae2",
+			toEncodeString: "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f8",
+			expectedString: "5c881fd924695cf196c2e4fec20d14b642026f2a0b1716ebaabb7067d4d597523d2db69d6d3794622147a14f19a66e7f9037e1d662d34501a8901a5de7771d7c",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize512},
+			h:              "5c881fd924695cf196c2e4fec20d14b642026f2a0b1716ebaabb7067d4d597523d2db69d6d3794622147a14f19a66e7f9037e1d662d34501a8901a5de7771d7c",
+			toEncodeString: "01323130393837363534333231303938373635343332313039383736353433323130393837363534333231303938373635343332313039383736353433323130",
+			expectedString: "486f64c1917879417fef082b3381a4e211c324f074654c38823a7b76f830ad00fa1fbae42b1285c0352f227524bc9ab16254288dd6863dccd5b9f54a1ad0541b",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize512},
+			toEncodeString: "fbeafaebef20fffbf0e1e0f0f520e0ed20e8ece0ebe5f0f2f120fff0eeec20f120faf2fee5e2202ce8f6f3ede220e8e6eee1e8f0f2d1202ce8f0f2e5e220e5d1",
+			expectedString: "cd7f602312faa465e3bb4ccd9795395de2914e938f10f8e127b7ac459b0c517b98ef779ef7c7a46aa7843b8889731f482e5d221e8e2cea852e816cdac407c7af",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize512},
+			n:              "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200",
+			h:              "cd7f602312faa465e3bb4ccd9795395de2914e938f10f8e127b7ac459b0c517b98ef779ef7c7a46aa7843b8889731f482e5d221e8e2cea852e816cdac407c7af",
+			toEncodeString: "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001fbe2e5f0eee3c820",
+			expectedString: "c544ae6efdf14404f089c72d5faf8dc6aca1db5e28577fc07818095f1df70661e8b84d0706811cf92dffb8f96e61493dc382795c6ed7a17b64685902cbdc878e",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize512},
+			h:              "c544ae6efdf14404f089c72d5faf8dc6aca1db5e28577fc07818095f1df70661e8b84d0706811cf92dffb8f96e61493dc382795c6ed7a17b64685902cbdc878e",
+			toEncodeString: "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000240",
+			expectedString: "4deb6649ffa5caf4163d9d3f9967fbbd6eb3da68f916b6a09f41f2518b81292b703dc5d74e1ace5bcd3458af43bb456e837326088f2b5df14bf83997a0b1ad8d",
+		},
+
+		{
+			cipher:         &Streebog{hashSize: hashSize512},
+			h:              "4deb6649ffa5caf4163d9d3f9967fbbd6eb3da68f916b6a09f41f2518b81292b703dc5d74e1ace5bcd3458af43bb456e837326088f2b5df14bf83997a0b1ad8d",
+			toEncodeString: "fbeafaebef20fffbf0e1e0f0f520e0ed20e8ece0ebe5f0f2f120fff0eeec20f120faf2fee5e2202ce8f6f3ede220e8e6eee1e8f0f2d1202ee4d3d8d6d104adf1",
+			expectedString: "28fbc9bada033b1460642bdcddb90c3fb3e56c497ccd0f62b8a2ad4935e85f037613966de4ee00531ae60f3b5a47f8dae06915d5f2f194996fcabf2622e6881e",
+		},
+	}
+
+	for i, testCase := range testCases {
+		cipher, n, h, toEncodeString, expectedString := testCase.cipher, testCase.n, testCase.h, testCase.toEncodeString, testCase.expectedString
+		t.Run(fmt.Sprintf("g %d", i), func(t *testing.T) {
+			cipher.Reset()
+			if h != "" {
+				cipher.h = bit512FromString(h)
+			}
+			if n != "" {
+				cipher.n = bit512FromString(n)
+			}
+			toEncode := bit512FromString(toEncodeString)
+			expected := bit512FromString(expectedString)
+			assert.Equal(t, expected.String(), cipher.g(cipher.h, toEncode).String())
+		})
+	}
+}
+
+func TestE(t *testing.T) {
+	initTableOnce.Do(initLPSTable)
+
+	testCases := []struct {
+		keyString      string
+		toEncodeString string
+		expectedString string
+	}{
+		{
+			keyString:      "b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574",
+			toEncodeString: "01323130393837363534333231303938373635343332313039383736353433323130393837363534333231303938373635343332313039383736353433323130",
+			expectedString: "fc221dc8b814fc27a4de079d10097600209e5375776898961f70bded0647bd8f1664cfa8bb8d8ff1e0df3e621568b66aa075064b0e81cce132c8d1475809ebd2",
+		},
+
+		{
+			keyString:      "23c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f15",
+			toEncodeString: "01323130393837363534333231303938373635343332313039383736353433323130393837363534333231303938373635343332313039383736353433323130",
+			expectedString: "e3889d8e40960453fd26431450bb9d29e8a78e78024656697caf698125ee83aabd796d133a3bd28988428cb112766d1a1e32831f12d36fad21b2440122a5cdf6",
+		},
+
+		{
+			keyString:      "b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574b383fc2eced4a574",
+			toEncodeString: "fbeafaebef20fffbf0e1e0f0f520e0ed20e8ece0ebe5f0f2f120fff0eeec20f120faf2fee5e2202ce8f6f3ede220e8e6eee1e8f0f2d1202ce8f0f2e5e220e5d1",
+			expectedString: "36959ac8fdda5b9e135aac3d62b5d9b0c279a27364f50813d69753b575e0718ab8158560122584464f72c8656b53f7aec0bccaee7cfdcaa9c6719e3f2627227e",
+		},
+
+		{
+			keyString:      "23c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f1523c5ee40b07b5f15",
+			toEncodeString: "fbeafaebef20fffbf0e1e0f0f520e0ed20e8ece0ebe5f0f2f120fff0eeec20f120faf2fee5e2202ce8f6f3ede220e8e6eee1e8f0f2d1202ce8f0f2e5e220e5d1",
+			expectedString: "dad73ab73b7e345f46435c690f05e94a5cb272d242ef44f6b0a4d5d1ad8883318b31ad01f96e709f08949cd8169f25e09273e8e50d2ad05b5f6de6496c0a8ca8",
+		},
+	}
+
+	for i, testCase := range testCases {
+		keyString, toEncodeString, expectedString := testCase.keyString, testCase.toEncodeString, testCase.expectedString
+		t.Run(fmt.Sprintf("e %d", i), func(t *testing.T) {
+			key := bit512FromString(keyString)
+			toEncode := bit512FromString(toEncodeString)
+			assert.Equal(t, expectedString, e(key, toEncode).String())
+		})
+	}
+}
